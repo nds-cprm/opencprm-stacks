@@ -1,0 +1,65 @@
+version: '2.2'
+
+networks:
+    default:
+    internal_hosts:
+        #external: true
+
+services:
+    nginx:
+        build:
+            context: nginx/
+        container_name: nginx4qgis-server
+        restart: unless-stopped
+        stdin_open: true
+        # tty: true
+        networks:
+            - internal_hosts
+        ports:
+            - 80:80
+    
+    qgis-server-ltr:        
+        image: ndscprm/qgis-server:3.10
+        container_name: fcgi-ltr4qgis-server
+        restart: unless-stopped
+        stdin_open: true
+        # tty: true
+        environment: 
+            - QGIS_SERVER_LOG_FILE=/tmp/qgis-server.log
+            - QGIS_SERVER_LOG_LEVEL=0  # INFO (log all requests)
+            - DEBUG=1  
+        networks:
+            - internal_hosts
+        volumes:
+            - qgis_server_data:/data:ro
+
+    qgis-server:        
+        image: ndscprm/qgis-server:3.14
+        container_name: fcgi4qgis-server
+        restart: unless-stopped
+        stdin_open: true
+        # tty: true
+        environment: 
+            - QGIS_SERVER_LOG_FILE=/tmp/qgis-server.log
+            - QGIS_SERVER_LOG_LEVEL=0  # INFO (log all requests)
+            - DEBUG=1  
+        networks:
+            - internal_hosts
+        volumes:
+            - qgis_server_data:/data:ro
+
+    mapproxy:        
+        image: ndscprm/mapproxy:1.11.0-py3.6
+        container_name: mapproxy4qgis-server
+        restart: unless-stopped
+        stdin_open: true
+        # tty: true 
+        networks:
+            - internal_hosts
+        volumes:
+            - qgis_server_data:/data:ro
+
+volumes: 
+    qgis_server_data:
+        name: qgis_server_data
+
